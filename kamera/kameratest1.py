@@ -3,19 +3,22 @@ import numpy as np
 import os
 from datetime import datetime
 
+
+
+
 # Create plantData directory if it doesn't exist
 os.makedirs('plantData', exist_ok=True)
 
 # Open camera
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1) # 0 = Webkamera, 1 = første usbkamera os
 
 if not cap.isOpened():
     print("Error: Could not open camera.")
     exit()
 
-# Green color range in HSV
-lower_green = np.array([35, 40, 40])
-upper_green = np.array([85, 255, 255])
+# Green color range in HSV, [HUE 0-180, Saturation 0-255, Brightness 0-255]
+lower_green = np.array([30, 50, 50])     # Original: 35, 40, 40
+upper_green = np.array([80, 255, 255])      # Original: 85, 255, 255
 
 green_percentages = []
 timestamps = []
@@ -29,12 +32,14 @@ def save_plant_data():
             f.write(f"{ts},{gp:.2f}\n")
     print(f"Data saved to {filename}")
 
+
+
 while True:
-    ret, frame = cap.read()
+   ret, frame = cap.read()
     if not ret:
-        print("Failed to grab frame")
         break
     
+
     # Get current timestamp
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
@@ -61,12 +66,14 @@ while True:
     cv2.imshow("Plant Monitoring", frame)
     cv2.imshow("Green Mask", mask)
     
+    
     key = cv2.waitKey(1)
     if key & 0xFF == ord('q'):
         save_plant_data()
         break
     elif key & 0xFF == ord('s'):  # Manual save with 's' key
         save_plant_data()
+        
 
 cap.release()
 cv2.destroyAllWindows()
