@@ -1,0 +1,345 @@
+[
+    {
+        "id": "ca17138c0226a866",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "0e66524fb899332d",
+        "type": "group",
+        "z": "ca17138c0226a866",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "06e149eb046f642b",
+            "4c72627b52813d6e"
+        ],
+        "x": 94,
+        "y": 59,
+        "w": 452,
+        "h": 142
+    },
+    {
+        "id": "c1f7ce1a62d3739c",
+        "type": "mqtt-broker",
+        "name": "LocalHost",
+        "broker": "localhost",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "9be774290bf43702",
+        "type": "ui_group",
+        "name": "MQTT-Gauge",
+        "tab": "ce1d947f4b90c3c7",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "ce1d947f4b90c3c7",
+        "type": "ui_tab",
+        "name": "HMI",
+        "icon": "dashboard",
+        "order": 2,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "7411a2ef233c184b",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-dark",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#097479",
+                    "value": "#097479",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#097479",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#333333",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#0eb8c0",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#555555",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#333333",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#eeeeee",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#097479",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#333333",
+                    "edited": false
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey",
+                "palette": "light"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "true",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "710b08351613b375",
+        "type": "ui_tab",
+        "name": "Camera Feeds",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "1c004db0d0b12222",
+        "type": "ui_group",
+        "name": "PlantCam1",
+        "tab": "710b08351613b375",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "b2cedb100c9e61c1",
+        "type": "ui_group",
+        "name": "PlantCam2",
+        "tab": "710b08351613b375",
+        "order": 2,
+        "disp": true,
+        "width": "12",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "bb252e9fc167e9bd",
+        "type": "ui_tab",
+        "name": "Wago WebVisu",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "00d1f6b67cfcfb16",
+        "type": "ui_group",
+        "name": "Wago-WebVisu",
+        "tab": "bb252e9fc167e9bd",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "06e149eb046f642b",
+        "type": "mqtt in",
+        "z": "ca17138c0226a866",
+        "g": "0e66524fb899332d",
+        "name": "",
+        "topic": "plc/sensor1",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "c1f7ce1a62d3739c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 190,
+        "y": 160,
+        "wires": [
+            [
+                "4c72627b52813d6e"
+            ]
+        ]
+    },
+    {
+        "id": "4c72627b52813d6e",
+        "type": "ui_gauge",
+        "z": "ca17138c0226a866",
+        "g": "0e66524fb899332d",
+        "name": "",
+        "group": "9be774290bf43702",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "gauge",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 10,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 470,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "6782ad1c5c9a2606",
+        "type": "ui_template",
+        "z": "ca17138c0226a866",
+        "group": "1c004db0d0b12222",
+        "name": "",
+        "order": 1,
+        "width": "12",
+        "height": "8",
+        "format": "<div ng-if=\"1\">\n    <img src=\"http://localhost:1881/cam\" width=\"100%\" />\n</div>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 200,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4b67190ca7eac6af",
+        "type": "ui_template",
+        "z": "ca17138c0226a866",
+        "group": "b2cedb100c9e61c1",
+        "name": "",
+        "order": 1,
+        "width": "12",
+        "height": "8",
+        "format": "<div ng-if=\"1\">\n    <img src=\"http://localhost:1881/cam\" width=\"100%\" />\n</div>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 200,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "241d432c824083bc",
+        "type": "ui_template",
+        "z": "ca17138c0226a866",
+        "group": "00d1f6b67cfcfb16",
+        "name": "",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "format": "<iframe src=\"https://example.com\" style=\"width:100%; height:500px; border:none;\"></iframe>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 200,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    }
+]
