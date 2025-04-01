@@ -6,8 +6,12 @@ from datetime import datetime
 # Create plantData directory if it doesn't exist
 os.makedirs('plantData', exist_ok=True)
 
+builtIn = 0
+usbCamera = 1
+
 # Open camera
-cap = cv2.VideoCapture(1)  # 0 = Webkamera, 1 = første usbkamera os
+cap = cv2.VideoCapture(builtIn)  # NB!! CHOOSE CORRECTLY!!! If there are more cameras try 2,3....
+
 
 if not cap.isOpened():
     print("Error: Could not open camera.")
@@ -15,9 +19,9 @@ if not cap.isOpened():
 
 # Green color range in HSV,   HSV = [HUE 0-180, Saturation 0-255, Brightness 0-255]
 lower_green = np.array([30, 70, 70])
-upper_green = np.array([80, 240, 240])
+upper_green = np.array([80, 240, 240]) # Needs more testing while in position methinks
 
-green_percentages = []
+green_percentages = [] # Empty arrays
 timestamps = []
 
 def save_plant_data():
@@ -52,16 +56,18 @@ while True:
     timestamps.append(current_time)
     
     # Display info
-    cv2.putText(frame, f"{current_time}", (10, 30), 
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+    cv2.putText(frame, f"{current_time}", (10, 30),  
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0), 2) # Text font / color top left corner Datetime
     cv2.putText(frame, f"Green: {green_percent:.2f}%", (10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
-    
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0), 2) # Text font / color top left corner green %
+    cv2.putText(frame, f"Press 'q' to exit, and 's' to manually save plant data", (10, 470),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0), 2) # Text font / color bottom, 'q' and 's' info
+
     cv2.imshow("Plant Monitoring", frame)
     cv2.imshow("Green Mask", mask)
     
     key = cv2.waitKey(1)
-    if key & 0xFF == ord('q'):
+    if key & 0xFF == ord('q'): # Manual quit with 'q' key (Needs either of the camera windows to be highlighted)
         save_plant_data()
         break
     elif key & 0xFF == ord('s'):  # Manual save with 's' key
