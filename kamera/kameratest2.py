@@ -16,7 +16,7 @@ usbCamera = 1
 # Plant monitor settings
 DECREASE_THRESHOLD = 10  # % decrease to trigger warning
 TIME_WINDOW = timedelta(minutes=1)  # Trend window
-READ_INTERVAL_SECONDS = 60  # How often to check plant
+READ_INTERVAL_SECONDS = 10  # How often to check plant
 
 # MQTT settings
 MQTT_BROKER = "localhost"
@@ -100,9 +100,7 @@ try:
 
         # Prepare MQTT payload
         mqtt_payload = {
-            "timestamp": timestamp_str,
             "green_percent": round(green_percent, 2),
-            "warning": warning_message
         }
 
         # Publish to MQTT
