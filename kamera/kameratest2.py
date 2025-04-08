@@ -98,13 +98,12 @@ try:
         if warning_message:
             print("🚨", warning_message)
 
-        # Prepare MQTT payload
-        mqtt_payload = {
-            "green_percent": round(green_percent, 2),
-        }
+       
 
         # Publish to MQTT
-        client.publish(MQTT_TOPIC, json.dumps(mqtt_payload))
+        # Publish only the green percentage as a plain number
+        client.publish(MQTT_TOPIC, f"{green_percent:.2f}")
+
 
         time.sleep(READ_INTERVAL_SECONDS)
 
