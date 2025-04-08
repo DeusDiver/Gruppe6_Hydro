@@ -1,100 +1,94 @@
 import cv2
 import numpy as np
 import os
-from datetime import datetime
-from collections import deque
+from datetime import datetime, timedelta
+from bisect import bisect_left
 
-# Create data directory
+# Create plantData directory if it doesn't exist
 os.makedirs('plantData', exist_ok=True)
 
-# Initialize camera
-cap = cv2.VideoCapture(1)
-cap.set(cv2.CAP_PROP_AUTO_WB, 0)        # Disable auto white balance
-cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)  # Manual exposure mode
-cap.set(cv2.CAP_PROP_EXPOSURE, -4)      # Initial exposure value (adjust as needed)
+builtIn = 0
+usbCamera = 1
 
-# Iceberg lettuce parameters
-lower_green = np.array([35, 40, 80])    # Hue, Saturation, Value
-upper_green = np.array([75, 180, 220])
-KERNEL_SIZE = 7                         # Morphology kernel size
-BUFFER_SIZE = 15                        # Temporal median buffer
-ROI_SCALE = 0.6                         # Center region of interest
+# Open camera
+cap = cv2.VideoCapture(builtIn)  # NB!! CHOOSE CORRECTLY!!! If there are more cameras try 2,3....
 
-# Initialize CLAHE for lighting normalization
-clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+# Configuration parameters
+DECREASE_THRESHOLD = 10  # 10% decrease to trigger warning
+TIME_WINDOW = timedelta(minutes=1)  # Monitoring window
 
-# Data storage
-percentage_buffer = deque(maxlen=BUFFER_SIZE)
-timestamps = []
+if not cap.isOpened():
+    print("Error: Could not open camera.")
+    exit()
+
+# Green color range in HSV
+lower_green = np.array([30, 70, 70])
+upper_green = np.array([80, 240, 240])
+
 green_percentages = []
+timestamps = []  # Now stores datetime objects
 
 def save_plant_data():
-    """Save data with timestamp"""
+    """Save data to timestamped file in plantData folder"""
     filename = datetime.now().strftime("plantData/%Y-%m-%d_%H-%M-%S.csv")
     with open(filename, 'w') as f:
         f.write("timestamp,green_percentage\n")
         for ts, gp in zip(timestamps, green_percentages):
-            f.write(f"{ts},{gp:.2f}\n")
+            f.write(f"{ts.strftime('%Y-%m-%d %H:%M:%S')},{gp:.2f}\n")
     print(f"Data saved to {filename}")
-
-def process_lettuce_frame(frame):
-    """Iceberg-specific processing pipeline"""
-    # Lighting normalization in LAB color space
-    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-    l_clahe = clahe.apply(l)
-    lab_clahe = cv2.merge((l_clahe, a, b))
-    enhanced = cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2BGR)
-    
-    # Noise reduction with bilateral filter
-    filtered = cv2.bilateralFilter(enhanced, d=9, sigmaColor=75, sigmaSpace=75)
-    
-    # HSV thresholding
-    hsv = cv2.cvtColor(filtered, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, lower_green, upper_green)
-    
-    # Morphological processing
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (KERNEL_SIZE, KERNEL_SIZE))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
-    
-    return mask
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
 
-    # Get ROI (center 60%)
-    h, w = frame.shape[:2]
-    roi = frame[
-        int(h*(0.5-ROI_SCALE/2)):int(h*(0.5+ROI_SCALE/2)),
-        int(w*(0.5-ROI_SCALE/2)):int(w*(0.5+ROI_SCALE/2))
-    ]
+    current_time = datetime.now()
     
-    # Process frame
-    mask = process_lettuce_frame(roi)
-    current_percent = (np.count_nonzero(mask) / mask.size * 100)
+    # Image processing
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, lower_green, upper_green)
     
-    # Temporal median filtering
-    percentage_buffer.append(current_percent)
-    final_percent = np.median(list(percentage_buffer))
+    # Clean up mask
+    kernel = np.ones((5,5), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     
-    # Store data
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Calculate green percentage
+    green_percent = (np.count_nonzero(mask) / mask.size) * 100
+    green_percentages.append(green_percent)
     timestamps.append(current_time)
-    green_percentages.append(final_percent)
     
-    # Display
-    display_frame = roi.copy()
-    cv2.putText(display_frame, f"{current_time}", (10,30), 
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 1)
-    cv2.putText(display_frame, f"Green: {final_percent:.1f}%", (10,60),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 1)
+    # Trend analysis
+    warning_message = None
+    if len(timestamps) >= 2:
+        # Find data points within our time window
+        window_start = current_time - TIME_WINDOW
+        start_index = bisect_left(timestamps, window_start)
+        recent_gps = green_percentages[start_index:]
+        
+        if len(recent_gps) >= 2:
+            oldest_gp = recent_gps[0]
+            newest_gp = recent_gps[-1]
+            
+            if oldest_gp != 0:  # Prevent division by zero
+                percent_change = ((newest_gp - oldest_gp) / oldest_gp) * 100
+                if percent_change <= -DECREASE_THRESHOLD:
+                    mins = TIME_WINDOW.total_seconds() // 60
+                    warning_message = f"WARNING: {abs(percent_change):.1f}% decrease in {mins} mins!"
+
+    # Display info
+    display_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    cv2.putText(frame, display_time, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0), 2)
+    cv2.putText(frame, f"Green: {green_percent:.2f}%", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0), 2)
     
-    cv2.imshow("Iceberg Lettuce Monitor", display_frame)
-    cv2.imshow("Plant Mask", mask)
+    if warning_message:
+        cv2.putText(frame, warning_message, (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
     
-    # Handle keys
+    cv2.putText(frame, "Press 'q' to exit, 's' to save", (10, 470), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0), 2)
+
+    cv2.imshow("Plant Monitoring", frame)
+    cv2.imshow("Green Mask", mask)
+    
     key = cv2.waitKey(1)
     if key == ord('q'):
         save_plant_data()
