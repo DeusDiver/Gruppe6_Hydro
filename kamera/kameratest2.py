@@ -2,28 +2,44 @@ import cv2
 import numpy as np
 import os
 import time
+import json
+import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
 from bisect import bisect_left
 
-# Create plantData directory if it doesn't exist
-os.makedirs('plantData', exist_ok=True)
+# ========== CONFIG ==========
 
+# Camera source
 builtIn = 0
 usbCamera = 1
 
-# Open camera
-cap = cv2.VideoCapture(builtIn)
-
-# Configuration parameters
+# Plant monitor settings
 DECREASE_THRESHOLD = 10  # % decrease to trigger warning
-TIME_WINDOW = timedelta(minutes=1)  # Monitoring window
-READ_INTERVAL_SECONDS = 60  # <-- Easy to tweak reading frequency
+TIME_WINDOW = timedelta(minutes=1)  # Trend window
+READ_INTERVAL_SECONDS = 60  # How often to check plant
 
+# MQTT settings
+MQTT_BROKER = "localhost"
+MQTT_PORT = 1883
+MQTT_TOPIC = "plant"
+
+# ========== INIT ==========
+
+# Ensure data directory exists
+os.makedirs('plantData', exist_ok=True)
+
+# Setup camera
+cap = cv2.VideoCapture(builtIn)
 if not cap.isOpened():
     print("Error: Could not open camera.")
     exit()
 
-# Green color range in HSV
+# MQTT client setup
+client = mqtt.Client()
+client.connect(MQTT_BROKER, MQTT_PORT, 60)
+client.loop_start()  # Start non-blocking loop
+
+# HSV green detection range
 lower_green = np.array([30, 70, 70])
 upper_green = np.array([80, 240, 240])
 
@@ -38,7 +54,7 @@ def save_plant_data():
             f.write(f"{ts.strftime('%Y-%m-%d %H:%M:%S')},{gp:.2f}\n")
     print(f"Data saved to {filename}")
 
-print("🌱 Plant monitoring started. Press Ctrl+C to stop.")
+print("🌿 Monitoring started. Press Ctrl+C to stop.")
 
 try:
     while True:
@@ -76,9 +92,21 @@ try:
                         mins = TIME_WINDOW.total_seconds() // 60
                         warning_message = f"WARNING: {abs(percent_change):.1f}% decrease in {mins} mins!"
         
-        print(f"[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Green: {green_percent:.2f}%")
+        # Show info
+        timestamp_str = current_time.strftime('%Y-%m-%d %H:%M:%S')
+        print(f"[{timestamp_str}] Green: {green_percent:.2f}%")
         if warning_message:
             print("🚨", warning_message)
+
+        # Prepare MQTT payload
+        mqtt_payload = {
+            "timestamp": timestamp_str,
+            "green_percent": round(green_percent, 2),
+            "warning": warning_message
+        }
+
+        # Publish to MQTT
+        client.publish(MQTT_TOPIC, json.dumps(mqtt_payload))
 
         time.sleep(READ_INTERVAL_SECONDS)
 
@@ -86,4 +114,7 @@ except KeyboardInterrupt:
     print("\n⏹️ Monitoring stopped by user.")
     save_plant_data()
 
+# Clean up
+client.loop_stop()
+client.disconnect()
 cap.release()
