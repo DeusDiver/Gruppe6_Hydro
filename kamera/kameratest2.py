@@ -15,8 +15,10 @@ usbCamera = 1
 
 # Plant monitor settings
 DECREASE_THRESHOLD = 10  # % decrease to trigger warning
+GREEN_THRESHOLD = 10  # Absolute threshold for warning (in %)
+MIN_DURATION = timedelta(seconds=30)  # Duration below threshold to trigger
 TIME_WINDOW = timedelta(minutes=1)  # Trend window
-READ_INTERVAL_SECONDS = 10  # How often to check plant
+READ_INTERVAL_SECONDS = 3  # How often to check plant
 
 # MQTT settings
 MQTT_BROKER = "localhost"
@@ -25,26 +27,23 @@ MQTT_TOPIC = "plant"
 
 # ========== INIT ==========
 
-# Ensure data directory exists
 os.makedirs('plantData', exist_ok=True)
 
-# Setup camera
 cap = cv2.VideoCapture(builtIn)
 if not cap.isOpened():
     print("Error: Could not open camera.")
     exit()
 
-# MQTT client setup
 client = mqtt.Client()
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
-client.loop_start()  # Start non-blocking loop
+client.loop_start()
 
-# HSV green detection range
 lower_green = np.array([30, 70, 70])
 upper_green = np.array([80, 240, 240])
 
 green_percentages = []
 timestamps = []
+below_threshold_start = None  # Track start time of threshold breach
 
 def save_plant_data():
     filename = datetime.now().strftime("plantData/%Y-%m-%d_%H-%M-%S.csv")
@@ -75,7 +74,18 @@ try:
         green_percentages.append(green_percent)
         timestamps.append(current_time)
 
-        # Trend analysis
+        # Threshold-based warning check
+        threshold_warning = 0
+        if green_percent < GREEN_THRESHOLD:
+            if below_threshold_start is None:
+                below_threshold_start = current_time
+            elapsed_time = current_time - below_threshold_start
+            if elapsed_time >= MIN_DURATION:
+                threshold_warning = 1
+        else:
+            below_threshold_start = None
+
+        # Trend analysis (existing functionality)
         warning_message = None
         if len(timestamps) >= 2:
             window_start = current_time - TIME_WINDOW
@@ -91,19 +101,19 @@ try:
                     if percent_change <= -DECREASE_THRESHOLD:
                         mins = TIME_WINDOW.total_seconds() // 60
                         warning_message = f"WARNING: {abs(percent_change):.1f}% decrease in {mins} mins!"
-        
-        # Show info
+
+        # Print status
         timestamp_str = current_time.strftime('%Y-%m-%d %H:%M:%S')
-        print(f"[{timestamp_str}] Green: {green_percent:.2f}%")
+        print(f"[{timestamp_str}] Green: {green_percent:.2f}% | Warning: {threshold_warning}")
         if warning_message:
             print("🚨", warning_message)
 
-       
-
-        # Publish to MQTT
-        # Publish only the green percentage as a plain number
-        client.publish(MQTT_TOPIC, f"{green_percent:.2f}")
-
+        # Publish JSON payload
+        payload = json.dumps({
+            "green_percent": round(green_percent, 2),
+            "warning": threshold_warning
+        })
+        client.publish(MQTT_TOPIC, payload)
 
         time.sleep(READ_INTERVAL_SECONDS)
 
@@ -111,7 +121,6 @@ except KeyboardInterrupt:
     print("\n⏹️ Monitoring stopped by user.")
     save_plant_data()
 
-# Clean up
 client.loop_stop()
 client.disconnect()
 cap.release()
